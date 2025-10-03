@@ -1,2 +1,6 @@
 #Ingored item  
 raw.csv
+
+#Large files 
+/data/fitted/RF/compressed_fitted_dict_RF_run1.gz
+/data/fitted/RF/fitted_dict_RF_run1.pkl

@@ -6,9 +6,12 @@ from xgboost import XGBClassifier
 import cloudpickle as cp
 import pandas as pd
 import numpy as np 
+import seaborn as sns
+import matplotlib.pyplot as plt
 from sklearn.base import clone
 from typing import Literal
 import copy
+import gzip
 
 class model_eval: 
     def __init__(self, 
@@ -113,13 +116,23 @@ class model_eval:
             #     "the pred_proba produced by the pipeline in this fold. "
             
     def save_dict(self, 
-                  save_path: str): 
-        with open(save_path, "wb") as f: 
-            cp.dump(self.fitted_dict_, f) 
-            print("Fitted dictionary saved") 
+                  save_path: str, compress: bool=False):
+        if compress: 
+            pickle_data=cp.dumps(self.fitted_dict_)
+            print("Data pickled")
+            compressed_data=gzip.compress(pickle_data)
+            print("Data compressed")
+            with open(save_path, "wb") as f: 
+                f.write(compressed_data)
+                print("Fitted dictionary saved") 
+        else:  
+            with open(save_path, "wb") as f: 
+                cp.dump(self.fitted_dict_, f) 
+                print("Fitted dictionary saved") 
             
     def load_dict(self, 
                   load_path: str, 
+                  compress: bool=False,
                   force: bool=False): 
         if not force: 
             # len_cur_dict=len(self.fitted_dict_)
@@ -131,19 +144,26 @@ class model_eval:
                 app_str="The fitted dictionary does NOT exist at this moment. \n"
             load_conf=input(f"{app_str} As a reminder: loading will over-ride existing fitted dictionary, please confirm to continue. (Y/N)").upper()
         if (load_conf == "Y") or (force): 
-            with open(load_path, "rb") as f: 
-                self.fitted_dict_=cp.load(f)
-                # self.fitted_dict_explain_="The dictionary has key being the fold identifier, and a tuple value for each key. The indexes of the tuple, ordered by from 0 to 4, are:\n" +\
-                # "The best pipeline for this fold\n the f1 score of the best pipeline in this fold\n the roc auc of the best pipeline in this fold\n the average precision of the best pipeline in this fold\n " +\
-                # "the pred_proba produced by the pipeline in this fold. "
+            if compress: 
+                with open(load_path, "rb") as f: 
+                    compressed_data=f.read()
+                decompressed_data=gzip.decompress(compressed_data)
+                self.fitted_dict_=cp.loads(decompressed_data)
+                print("Loading completed. ")
+            else: 
+                with open(load_path, "rb") as f: 
+                    self.fitted_dict_=cp.load(f)
+                    # self.fitted_dict_explain_="The dictionary has key being the fold identifier, and a tuple value for each key. The indexes of the tuple, ordered by from 0 to 4, are:\n" +\
+                    # "The best pipeline for this fold\n the f1 score of the best pipeline in this fold\n the roc auc of the best pipeline in this fold\n the average precision of the best pipeline in this fold\n " +\
+                    # "the pred_proba produced by the pipeline in this fold. "
                 print("Loading completed. ")
         else: 
             print("Loading aborted. ")
             
     def fitted_dict_explain(self): 
         print("The dictionary has key being the fold identifier, and a tuple value for each key. The indexes of the tuple, ordered by from 0 to 4, are:\n" +\
-                "The best pipeline for this fold\n the f1 score of the best pipeline in this fold\n the roc auc of the best pipeline in this fold\n the average precision of the best pipeline in this fold\n " +\
-                "the pred_proba produced by the pipeline in this fold.\n")
+                " * The best pipeline for this fold\n * The f1 score of the best pipeline in this fold\n * The roc auc of the best pipeline in this fold\n * The average precision of the best pipeline in this fold\n " +\
+                " * The pred_proba produced by the pipeline in this fold.\n")
         if not hasattr(self, "fitted_dict_"): 
             print("As a reminder, the attribute fitted_dict_ is NOT created at this moment. ")
             
@@ -224,4 +244,65 @@ class model_eval:
                 "In the inner dictionary, for each key (identifying TP, FP, TN, and FN), values are the count of the corresponding category, ordered according to the threshold being from >=0 to >=1 with step 0.01.\n")
         if not hasattr(self, "confusion_data_by_threshold_"): 
             print("As a reminder, the attribute confusion_data_by_threshold_ is NOT created at this moment. ")
+            
+    def metrics_by_threshold(self, eps: float=1e-10): 
+        self.metrics_by_threshold_folds_=dict()
+        # self.metrics_by_threshold_distribution_=dict()
+        if not hasattr(self, "confusion_data_by_threshold_"): 
+            ValueError("The confusion_data_by_threshold_ attribute does not exist at this moment. Please create the confusion data with object function confusion_data_by_threshold.")
+        for fold in self.confusion_data_by_threshold_.keys(): 
+            fold_confusion=self.confusion_data_by_threshold_[fold]
+            
+            fold_f1=(2*fold_confusion["TP"])/((2*fold_confusion["TP"])+fold_confusion["FP"]+fold_confusion["FN"]+eps)
+            fold_precision=fold_confusion["TP"]/(fold_confusion["TP"]+fold_confusion["FP"]+eps)
+            fold_FNR=fold_confusion["FN"]/(fold_confusion["FN"]+fold_confusion["TP"]+eps)
+            
+            self.metrics_by_threshold_folds_[fold]={
+                "f1": fold_f1, 
+                "precision": fold_precision, 
+                "FNR": fold_FNR
+            }
+            
+        f1_all=np.array([self.metrics_by_threshold_folds_[i]["f1"] for i in self.metrics_by_threshold_folds_.keys()])
+        precision_all=np.array([self.metrics_by_threshold_folds_[i]["precision"] for i in self.metrics_by_threshold_folds_.keys()])
+        FNR_all=np.array([self.metrics_by_threshold_folds_[i]["FNR"] for i in self.metrics_by_threshold_folds_.keys()])
+            
+        f1_mean=f1_all.mean(axis=0)
+        f1_std=f1_all.std(axis=0)
+        precision_mean=precision_all.mean(axis=0)
+        precision_std=precision_all.std(axis=0)
+        FNR_mean=FNR_all.mean(axis=0)
+        FNR_std=FNR_all.std(axis=0)
         
+        self.metrics_by_threshold_distribution_={
+            "f1 mean": f1_mean, 
+            "f1 std": f1_std, 
+            "precision mean": precision_mean, 
+            "precision std": precision_std, 
+            "FNR mean": FNR_mean, 
+            "FNR std": FNR_std
+        }
+        
+        eval_f1=np.array([self.fitted_dict_[i][1] for i in self.fitted_dict_.keys()])
+        eval_roc_auc=np.array([self.fitted_dict_[i][2] for i in self.fitted_dict_.keys()])
+        eval_ap=np.array([self.fitted_dict_[i][3] for i in self.fitted_dict_.keys()])
+        
+        self.eval_metrics_={
+            "f1": eval_f1.mean(), 
+            "roc_auc": eval_roc_auc.mean(), 
+            "ap": eval_ap.mean()
+        }
+    
+    def create_visual(self): 
+        if (not hasattr(self, "metrics_by_threshold_folds_")) or (not hasattr(self, "metrics_by_threshold_distribution_")): 
+            self.metrics_by_threshold()
+        #Create graph
+        threshold=np.arange(start=0, stop=1.01, step=0.01) 
+        fig, ax=plt.subplots(1,1, figsize=(12,6))
+        sns.lineplot(x=threshold, y=self.metrics_by_threshold_distribution_["f1 mean"], color="black", label="f1 mean", ax=ax)
+        sns.lineplot(x=threshold, y=self.metrics_by_threshold_distribution_["precision mean"], color="blue", label="precision mean", ax=ax)
+        sns.lineplot(x=threshold, y=self.metrics_by_threshold_distribution_["FNR mean"], color="red", label="FNR mean", ax=ax)
+        
+        ax.set_title("Mean of key metrics by threshold")
+        
+        plt.show()
