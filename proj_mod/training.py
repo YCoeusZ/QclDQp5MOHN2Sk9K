@@ -24,7 +24,9 @@ class model_eval:
                 search_cv_seed=420, 
                 search_cv_splits=5, 
                 search_seed=420, 
-                search_cv_n_jobs=None
+                search_cv_n_jobs=None, 
+                random_search_n_iter=30, 
+                searech_verbose=1
                 ):
         # self.pipe=pipe
         # self.df_feat=df_feat
@@ -36,6 +38,8 @@ class model_eval:
         self.search_cv_seed=search_cv_seed
         self.search_cv=StratifiedKFold(n_splits=search_cv_splits, shuffle=True, random_state=self.search_cv_seed)
         self.search_cv_n_jobs=search_cv_n_jobs
+        self.random_search_n_iter=random_search_n_iter
+        self.search_verbose=searech_verbose
         # self.fitted_dict_=None
         
     def _find_rfe_step_name(self, pipe: Pipeline): 
@@ -78,12 +82,12 @@ class model_eval:
                 search=RandomizedSearchCV(
                     estimator=clone(pipe), 
                     param_distributions=param_dict_copy, 
-                    n_iter=30, 
+                    n_iter=self.random_search_n_iter, 
                     cv=self.search_cv, 
                     scoring=["f1", "roc_auc", "average_precision"], 
                     refit="average_precision", 
                     n_jobs=self.search_cv_n_jobs, 
-                    verbose=1, 
+                    verbose=self.search_verbose, 
                     random_state=self.search_seed, 
                     error_score="raise",
                     return_train_score=False
@@ -97,7 +101,7 @@ class model_eval:
                     scoring=["roc_auc", "average_precision", "f1"], 
                     refit="average_precision", 
                     n_jobs=self.search_cv_n_jobs, 
-                    verbose=1, 
+                    verbose=self.search_verbose, 
                     error_score="raise",
                     return_train_score=False
                 )
