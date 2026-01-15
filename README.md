@@ -55,7 +55,9 @@ See detail at [this notebook](./note_books/data_transforming.ipynb) and [this no
 
 **Project Host KPI**: Hit %81 or above accuracy by evaluating with $5$-fold cross validation and reporting the average performance score.
 
-**Author Remark**: The dataset has imbalanced target ($\approx$ 93 percent negative), so using accuracy score as KPI will be misleading - For instance, I can get $93$ percent accuracy by just assuming everyone is not subscribing. This is why I opted for F1 score otherwise metric as they are more appropriate in context of imbalanced dataset. 
+**Author Remark**: 
+* When we speak of data splitting, we are talking about (target based) stratified splits. 
+* The dataset has imbalanced target ($\approx$ 93 percent negative), so using accuracy score as KPI will be misleading - For instance, I can get $93$ percent accuracy by just assuming everyone is not subscribing. This is why I opted for F1 score otherwise metric as they are more appropriate in context of imbalanced dataset. 
 
 ## Baseline (trivial) model 
 
@@ -140,5 +142,6 @@ The author has brainstormed some possible solutions:
 * Investigate if the output of the "personal" only model and the full model have any relationships. 
 * Investigate if there is way one can find more impact from the "personal" features. 
 * Ranking the customers by "grid searching" the best campaign method with the full model. Partial dependence and Individual conditional expectation (ICE) plots might serve as alternative to the "grid searching". 
+* Alternative methods to use the model, since most of the signal is within the "campaign" features, it might be valuable to produce suggestions of "best campaign method" instead of attempting to eliminate "low potential customers".
 
 The author will attempt to work on this when time permits. 
