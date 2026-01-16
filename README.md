@@ -139,7 +139,7 @@ See detail at [the end of this file](./note_books/xgboost.ipynb).
 As we can observe, the tradeoff is "not worth it". 
 
 The author has brainstormed some possible solutions: 
-* Investigate if the output of the "personal" only model and the full model have any relationships. 
+* Investigate if the output of the "personal" only model and the full model have any (non-strictly increasing) relationships. 
 * Investigate if there is way one can find more impact from the "personal" features. 
 * Ranking the customers by "grid searching" the best campaign method with the full model. Partial dependence and Individual conditional expectation (ICE) plots might serve as alternative to the "grid searching". 
 * Alternative methods to use the model, since most of the signal is within the "campaign" features, it might be valuable to produce suggestions of "best campaign method" instead of attempting to eliminate "low potential customers".
