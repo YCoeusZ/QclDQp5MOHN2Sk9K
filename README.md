@@ -51,7 +51,7 @@ See detail at [this notebook](./note_books/data_transforming.ipynb) and [this no
 
 **Goal**: Predict if the customer will subscribe (yes/no) to a term deposit (variable y)
 
-**Author's Personal KPI**: ($5$-fold) Cross validation mean of F1 score (at $0.5$ threshold, and in general), ROC-AUC, Average Precision. 
+**Author's Personal KPI**: ($5$-fold) Cross validation mean of F1 score (at $0.5$ threshold, and in general), ROC-AUC, and Average Precision, where the latter two are preferred-they "represent" tradeoffs more. 
 
 **Project Host KPI**: Hit %81 or above accuracy by evaluating with $5$-fold cross validation and reporting the average performance score.
 
@@ -141,7 +141,28 @@ As we can observe, the tradeoff is "not worth it".
 The author has brainstormed some possible solutions: 
 * Investigate if the output of the "personal" only model and the full model have any (non-strictly increasing) relationships. 
 * Investigate if there is way one can find more impact from the "personal" features. 
-* Ranking the customers by "grid searching" the best campaign method with the full model. Partial dependence and Individual conditional expectation (ICE) plots might serve as alternative to the "grid searching". 
+* Ranking the customers by "grid searching" the best campaign method with the full model. Partial dependence and Individual conditional expectation (ICE) plots might serve as alternative to the "grid searching". The ICE plot in respect to "duration" will be the most important - we should prefer both "highest potential" and "early potential". 
 * Alternative methods to use the model, since most of the signal is within the "campaign" features, it might be valuable to produce suggestions of "best campaign method" instead of attempting to eliminate "low potential customers".
+
+After the above issue regarding model usage is resolved, the author will seek to provide a method to update the model. The key distinction here is that the currently model makes the assumption that there is no selection bias - each human as the same probability of being reached out; however, the same would not be true post the decision making under assistance of this model - the data we will have will be exclusively of the ones the company decided to reach out, under advise of this model. To tangle with this issue, the author suggests some possible solutions: 
+
+* **Probability based adjustment**: 
+    We define some random variables: 
+    - $S\in \{1,0\}$ is the indicator of someone actually being a subscriber. 
+    - $R\in \{1,0\}$ is the indicator of is someone was reached out. 
+    - $X$ is being random vector representing features of a data point. 
+
+    Then we have 
+    $$
+    P(S=1|R=1\cap X=x) \\ = \frac{P(S=1\cap R=1\cap X=x)}{P(R=1\cap X=x)} = \frac{P(R=1|S=1 \cap X=x)P(S=1|X=x)P(X=x)}{P(R=1\cap X=x)} \\ \propto P(R=1|S=1 \cap X=x)P(S=1|X=x)\; . 
+    $$
+    
+    In this context, what we actually want is $P(S=1|X=x)$, we can fit (calibrated) new models to approximate $P(S=1|R=1\cap X=x)$ and $P(R=1|S=1 \cap X=x)$, and we, then, can calculate $P(S=1|X=x)$. 
+
+* **Seek new data**: 
+    The company can also seek outside data to "patch up" the missing "not reached out" portion - labelling it by passing the data through the same model advised reach out decision making process to determine if we would have reached out or not. 
+
+* **Deliberate reweighting**: 
+    The issue is that we do not have enough information on the population where the company decided not to reach out at all under influence of this model. For instance, we can for the future model to "pay more attention" to the data points by reweigthing each data point $x$ by $\frac{1}{P(R=1|X=x)}$ (same notation as in "**Probability based adjustment**" above, where $P(R=1|X=x)$ is something we will have to approximate through another model). 
 
 The author will attempt to work on this when time permits. 
