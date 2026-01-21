@@ -57,7 +57,7 @@ See detail at [this notebook](./note_books/data_transforming.ipynb) and [this no
 
 **Author Remark**: 
 * When we speak of data splitting, we are talking about (target based) stratified splits. 
-* The dataset has imbalanced target ($\approx$ 93 percent negative), so using accuracy score as KPI will be misleading - For instance, I can get $93$ percent accuracy by just assuming everyone is not subscribing. This is why I opted for F1 score otherwise metric as they are more appropriate in context of imbalanced dataset. 
+* The dataset has imbalanced target ($\approx$ 93 percent negative), so using accuracy score as KPI will be misleading - For instance, I can get $93$ percent accuracy by just assuming everyone is not subscribing. This is why I opted for F1 score, ROC-AUC, and Avergae Precision metrics as they are more appropriate in context of imbalanced dataset. 
 
 ## Baseline (trivial) model 
 
