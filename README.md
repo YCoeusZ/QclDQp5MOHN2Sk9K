@@ -157,10 +157,10 @@ After the above issue regarding model usage is resolved, the author will seek to
     P(S=1|R=1\cap X=x) \\ = \frac{P(S=1\cap R=1\cap X=x)}{P(R=1\cap X=x)} = \frac{P(R=1|S=1 \cap X=x)P(S=1|X=x)P(X=x)}{P(R=1\cap X=x)} \\ \propto P(R=1|S=1 \cap X=x)P(S=1|X=x)\; . 
     $$
     
-    In this context, what we actually want is $P(S=1|X=x)$, we can fit (calibrated) new models to approximate $P(S=1|R=1\cap X=x)$ and $P(R=1|S=1 \cap X=x)$, and we, then, can calculate $P(S=1|X=x)$. 
+    In this context, what we actually want is $P(S=1|X=x)$, we can fit (calibrated) new models to approximate $P(S=1|R=1\cap X=x)$ (We can create this with the new data) and $P(R=1|S=1 \cap X=x)$ (we will need data collected without selection bias for this one, for instance, the old data, or collect some low amount of new random data as well), and we, then, can calculate $P(S=1|X=x)$. 
 
 * **Seek new data**: 
-    The company can also seek outside data to "patch up" the missing "not reached out" portion - labelling it by passing the data through the same model advised reach out decision making process to determine if we would have reached out or not. 
+    The company can also seek outside data to "patch up" the missing "not reached out" portion - labelling it by passing the data through the same model advised reach out decision making process to determine if we would have reached out or not. A reweighting according to data proportion will be called for when training. 
 
 * **Deliberate reweighting**: 
     The issue is that we do not have enough information on the population where the company decided not to reach out at all under influence of this model. For instance, we can for the future model to "pay more attention" to the data points by reweigthing each data point $x$ by $\frac{1}{P(R=1|X=x)}$ (same notation as in "**Probability based adjustment**" above, where $P(R=1|X=x)$ is something we will have to approximate through another model). 
