@@ -163,6 +163,6 @@ After the above issue regarding model usage is resolved, the author will seek to
     The company can also seek outside data to "patch up" the missing "not reached out" portion - labelling it by passing the data through the same model advised reach out decision making process to determine if we would have reached out or not. A reweighting according to data proportion will be called for when training. 
 
 * **Deliberate reweighting**: 
-    The issue is that we do not have enough information on the population where the company decided not to reach out at all under influence of this model. For instance, we can for the future model to "pay more attention" to the data points by reweigthing each data point $x$ by $\frac{1}{P(R=1|X=x)}$ (same notation as in "**Probability based adjustment**" above, where $P(R=1|X=x)$ is something we will have to approximate through another model). 
+    The issue is that we do not have enough information on the population where the company decided not to reach out at all under influence of this model. For instance, we can for the future model to "pay more attention" to the data points by reweigthing each data point $x$ by $\frac{1}{P(R=1|X=x)}$ (same notation as in "**Probability based adjustment**" above, where $P(R=1|X=x)$ is something we will have to approximate through another model). This will increase the weight at the data point where the company is less likely to reachout, while decrease weight at data point where the company is more likely to reach out. 
 
 The author will attempt to work on this when time permits. 
